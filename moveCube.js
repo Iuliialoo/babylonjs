@@ -30,14 +30,16 @@ const lines = [
     [points[6], points[7]]
 ]
 
-const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 0.3}, scene);
-
-console.log(lines)
-
-//добавить линии в один объект
 const cubeLines = BABYLON.MeshBuilder.CreateLineSystem("cube", {lines: lines})
 
+const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 0.3}, scene);
+
 const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
+
+cubeLines.position = pointCenter;
+let moveX = 1;
+let moveY = 1;
+let moveZ = 1;
 
 var sliderX = new BABYLON.GUI.Slider();
 sliderX.minimum = -15;
@@ -131,3 +133,18 @@ engine.runRenderLoop(function () {
 window.addEventListener("resize", function () {
     engine.resize();
 });
+
+
+//поменяй точки в линии местами если вторая точка меньше первой
+// if (line[0]._x > line[1]._x) {
+//     let temp = line[0];
+//     line[0] = line[1];
+//     line[1] = temp;
+// }
+// dx = line[1]._x - line[0]._x;
+// dy = line[1]._y - line[0]._y;
+// dxWin0 = window[0]._x - line[0]._x;
+// dxWin1 = window[1]._x - line[0]._x;
+// newPoint1 = new BABYLON.Vector3(window[0]._x, dy * dxWin0 / dx + line[0]._y, 0);
+// newPoint2 = new BABYLON.Vector3(window[1]._x, dxWin1 * dy / dx + line[0]._y, 0);
+// return [newPoint1, newPoint2];

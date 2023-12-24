@@ -4,7 +4,7 @@ const scene = new BABYLON.Scene(engine);
 scene.clearColor = new BABYLON.Color3(0.5, 0.5, 0.5);
 
 //создание камеры
-const camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(0, 0, -50), scene);
+const camera = new BABYLON.UniversalCamera("UniversalCamera", new BABYLON.Vector3(7.5, 0, -50), scene);
 camera.attachControl(canvas, true);
 
 //перемещение камеры
@@ -44,7 +44,7 @@ let line;
 let lins;
 let Axis;
 //создание задней стенки с помощью box
-const backWall = BABYLON.MeshBuilder.CreateBox("box", {width: 2 * maxX + 2, height: 2 * maxY + 2, depth: 0.1}, scene);
+const backWall = BABYLON.MeshBuilder.CreateBox("box", {width: 2 * maxX + 4, height: 2 * maxY + 4, depth: 0.1}, scene);
 backWall.position = new BABYLON.Vector3(0, 0, 0.2);
 backWall.material = new BABYLON.StandardMaterial("backWallMaterial", scene);
 backWall.material.diffuseColor = new BABYLON.Color3(1, 1, 1);
@@ -91,11 +91,17 @@ const changeScaling = (value) => {
     scaling = value;
     if (line) {
         line.scaling = new BABYLON.Vector3(scaling, scaling, scaling)
+        colorLine1.scaling = new BABYLON.Vector3(scaling, scaling, scaling);
+        colorLine2.scaling = new BABYLON.Vector3(scaling, scaling, scaling);
+        hatchingLines1.scaling = new BABYLON.Vector3(scaling, scaling, scaling);
+        hatchingLines2.scaling = new BABYLON.Vector3(scaling, scaling, scaling);
         lins.dispose();
         
         textOnGraphicEs.position = new BABYLON.Vector3(scaling * 100 * es + 0.5, maxY + 0.5, 0);
         textOnGraphicEi.position = new BABYLON.Vector3(scaling * 100 * ei + 0.5, maxY + 0.5, 0);
         textOnGraphicX_.position = new BABYLON.Vector3(scaling * 100 * x_ + 0.5, maxY + 0.5, 0);
+        textOnGraphic3Q_.position = new BABYLON.Vector3(scaling * 100 * (x_ - 3 * q) - 0.5, baseSize / 2, 0)
+        textOnGraphic3Q.position = new BABYLON.Vector3(scaling * 100 * (x_ + 3 * q) + 0.5, baseSize / 2, 0)
         textOflineMaxYOnAxis.position = new BABYLON.Vector3(-1.3, scaling * 0.286 * maxYOnAxisY, 0);
         lineMaxYOnAxis.position = new BABYLON.Vector3(0, scaling * 0.286 * maxYOnAxisY, 0);
         createLins();
@@ -218,7 +224,7 @@ const createGUI = () => {
     inputX_.alpha = 2;
     inputX_.focusedBackground = "white";
     inputX_.focusedColor = "black";
-    inputX_.text = "0.044";
+    inputX_.text = "0.026";
     rectBack.addControl(inputX_);
 
     //создание текста Q
@@ -266,6 +272,12 @@ const createGUI = () => {
             textOnGraphicEs.dispose();
             textOnGraphicEi.dispose();
             textOnGraphicX_.dispose();
+            textOnGraphic3Q.dispose();
+            textOnGraphic3Q_.dispose();
+            hatchingLines1.dispose();
+            colorLine1.dispose();
+            hatchingLines2.dispose();
+            colorLine2.dispose();
             lineMaxYOnAxis.dispose();
             textOflineMaxYOnAxis.dispose();
         }
@@ -300,17 +312,23 @@ const createAxis = () => {
     ]
     Axis = BABYLON.MeshBuilder.CreateLineSystem("Axis", {lines: AxisLines})
     Axis.enableEdgesRendering();
-    Axis.edgesWidth = 10.0;
+    Axis.edgesWidth = 5.0;
     Axis.edgesColor = new BABYLON.Color4(0, 0, 0, 1);
 }
 createAxis();
 
-//входные данные
-
-
 let x = [];
 let y = [];
 let pointsForGraphic = [];
+
+const functionOfGraphic = (x) => {
+    let y1 = 1 / (q * Math.sqrt(2 * Math.PI))
+    let y2 = - Math.pow((x - x_), 2) / (2 * Math.pow(q, 2));
+    let y3 = Math.exp(y2);
+    let y0 = y1 * y3
+    return y0;
+}
+
 let createGraphic = () => {
     x = [];
     y = [];
@@ -324,18 +342,18 @@ let createGraphic = () => {
     //построение графика
     let count = 0;
     while ( count < x.length) {
-        let y1 = 1 / (q * Math.sqrt(2 * Math.PI))
-        let y2 = - Math.pow((x[count] - x_), 2) / (2 * Math.pow(q, 2));
-        let y3 = Math.exp(y2);
-        let y0 = y1 * y3
-        y.push(y0)
-        pointsForGraphic.push(new BABYLON.Vector3(100 * x[count], 0.286 * y0, 0));
+        y.push(functionOfGraphic(x[count]))
+        pointsForGraphic.push(new BABYLON.Vector3(100 * x[count], 0.286 * y[count], 0));
         // console.log(`${count} = ${x[count]}  ${j}`)
         count++
     }
     line = BABYLON.MeshBuilder.CreateLines("line", { points: pointsForGraphic }, scene);
-    line.color = new BABYLON.Color3(0, 0, 0);
-    line.scaling = new BABYLON.Vector3(scaling, scaling, scaling)
+    line.scaling = new BABYLON.Vector3(scaling, scaling, scaling);
+    line.enableEdgesRendering();
+    line.edgesWidth = 8.0;
+    line.edgesColor = new BABYLON.Color4(0, 0, 0, 1);
+    if (x_ - 3 * q < ei) fillGraphic(x_ - 3 * q, ei, new BABYLON.Color3(1, 0, 0), 1);
+    if (x_ + 3 * q > es) fillGraphic(es, x_ + 3 * q, new BABYLON.Color3(0, 0, 1), 2);
     createLins();
     createTexts();
     createNumberOfAxis();
@@ -345,7 +363,9 @@ const createLins = () => {
     let lin = [
         [new BABYLON.Vector3(scaling * 100 * x_, baseSize, 0), new BABYLON.Vector3(scaling * 100 * x_, -baseSize, 0)],
         [new BABYLON.Vector3(scaling * 100 * ei, baseSize, 0), new BABYLON.Vector3(scaling * 100 * ei, -baseSize, 0)],
-        [new BABYLON.Vector3(scaling * 100 * es, baseSize, 0), new BABYLON.Vector3(scaling * 100 * es, -baseSize, 0)]
+        [new BABYLON.Vector3(scaling * 100 * es, baseSize, 0), new BABYLON.Vector3(scaling * 100 * es, -baseSize, 0)],
+        [new BABYLON.Vector3(scaling * 100 * ( x_ - 3 * q), baseSize / 2, 0), new BABYLON.Vector3(scaling * 100 * (x_ - 3 * q), -baseSize / 2, 0)],
+        [new BABYLON.Vector3(scaling * 100 * (x_ + 3 * q), baseSize / 2, 0), new BABYLON.Vector3(scaling * 100 * (x_ + 3 * q), -baseSize / 2, 0)],
     ]
     lins = BABYLON.MeshBuilder.CreateLineSystem("lin", {lines: lin})
     lins.color = new BABYLON.Color3(0, 0, 0);
@@ -414,6 +434,58 @@ const createTexts = () => {
     textOnGraphicEi.position = new BABYLON.Vector3(scaling * 100 * ei + 0.5, maxY + 0.5, 0);
     textOnGraphicX_ = createText(`${x_}`);
     textOnGraphicX_.position = new BABYLON.Vector3(scaling * 100 * x_ + 0.5, maxY + 0.5, 0);
+    textOnGraphic3Q_ = createText(`${(x_ - 3 * q).toFixed(2)}`);
+    textOnGraphic3Q_.position = new BABYLON.Vector3(scaling * 100 * (x_ - 3 * q) - 0.5, baseSize / 2, 0);
+    textOnGraphic3Q = createText(`${(x_ + 3 * q).toFixed(2)}`);
+    textOnGraphic3Q.position = new BABYLON.Vector3(scaling * 100 * (x_ + 3 * q) + 0.5, baseSize / 2, 0);
+}
+
+let colorLine1, colorLine2, hatchingLines1, hatchingLines2;
+const fillGraphic = (from, to, color, number) => {
+    let count = 0;
+    let colorPointsForGraphic = [];
+    let hatchingPoints = []
+    while (x[count] <= to) {
+        if (x[count] >= from) {
+            colorPointsForGraphic.push(new BABYLON.Vector3(100 * x[count], 0.286 * y[count], 0));
+        }
+        count++
+    }
+    console.log(`From ${from} To ${to}`)
+    for (let i = from; i < to; i = i + 0.001) {
+        hatchingPoints.push([new BABYLON.Vector3(100 * i, 0, 0), new BABYLON.Vector3(100 * i, 0.286 * functionOfGraphic(i), 0)])
+        console.log(`${i} ${functionOfGraphic(i)}`)
+    }
+
+    colorPointsForGraphic.push(new BABYLON.Vector3(100 * to, 0, 0));
+    colorPointsForGraphic.push(new BABYLON.Vector3(100 * from, 0, 0));
+    colorPointsForGraphic.push(new BABYLON.Vector3(100 * from, 0.286 * functionOfGraphic(from), 0));
+
+    if (number == 1) {
+        colorLine1 = BABYLON.MeshBuilder.CreateLines("lineColor", { points: colorPointsForGraphic }, scene);
+        colorLine1.scaling = new BABYLON.Vector3(scaling, scaling, scaling)
+        colorLine1.enableEdgesRendering();
+        colorLine1.edgesWidth = 8.0;
+        colorLine1.edgeColor = new BABYLON.Vector3(color.x, color.y, color.z, 1);
+
+        hatchingLines1 = BABYLON.MeshBuilder.CreateLineSystem("hatchingLine1", { lines: hatchingPoints }, scene);
+        hatchingLines1.scaling = new BABYLON.Vector3(scaling, scaling, scaling)
+        hatchingLines1.enableEdgesRendering();
+        hatchingLines1.edgesWidth = 5.0;
+    } else {
+        colorLine2 = BABYLON.MeshBuilder.CreateLines("", { points: colorPointsForGraphic }, scene);
+        colorLine2.scaling = new BABYLON.Vector3(scaling, scaling, scaling)
+        colorLine2.enableEdgesRendering();
+        colorLine2.edgesWidth = 8.0;
+        colorLine2.edgeColor = new BABYLON.Vector3(color.x, color.y, color.z, 1);
+
+        hatchingLines2 = BABYLON.MeshBuilder.CreateLineSystem("hatchingLine2", { lines: hatchingPoints }, scene);
+        hatchingLines2.color = color;
+        hatchingLines2.scaling = new BABYLON.Vector3(scaling, scaling, scaling)
+        hatchingLines2.enableEdgesRendering();
+        hatchingLines2.edgesWidth = 5.0;
+    }
+    //матричные вычесления
 }
 
 // createGraphic();
