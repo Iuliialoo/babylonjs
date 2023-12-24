@@ -176,15 +176,19 @@ const createGUI = () => {
     buttonCheck.paddingRight =  "330px";
     buttonCheck.zIndex = -1;
     buttonCheck.onPointerUpObservable.add(function () {
+        console.log(newLine)
+        if (newLine) {
+            console.log("a")
+            newLine.dispose();
+            sphereANew.dispose();
+            sphereBNew.dispose();
+        }
         checkLine.dispose();
         textAObject.dispose();
         textBObject.dispose();
         sphereA.dispose();
         sphereB.dispose();
         createCheckLine(pointCheckLine);
-        let newPoints;
-        newPoints = clipLine(pointCheckLine, [new BABYLON.Vector3(5, 10, 0), new BABYLON.Vector3(10, 5, 0)]);
-        if (newPoints) createNewLine(newPoints);
     }
     )
     stackPanel2.addControl(buttonCheck);
@@ -329,9 +333,6 @@ const clipLine = (line, window) => {
             points.sort((a, b) => a._x - b._x)
             points.pop();
             points.shift();
-            points.forEach(element => {
-                createSphere(element, new BABYLON.Color3(1, 0, 1));
-            });
             return points;
         }
     }
@@ -367,6 +368,8 @@ cutLines = (line, window) => {
 let checkLine;
 let sphereA;
 let sphereB;
+let sphereANew;
+let sphereBNew;
 let textBObject;
 let textAObject;
 
@@ -396,15 +399,17 @@ const createSphere = (position, color) => {
     return sphere;
 }
 
+let newLine;
+
 const createNewLine = (line) => {
-    const newLine = BABYLON.MeshBuilder.CreateLines("newLine", {
+    newLine = BABYLON.MeshBuilder.CreateLines("newLine", {
         points: line, scene});
     newLine.color = new BABYLON.Color3(1, 0, 0);
     newLine.enableEdgesRendering();
     newLine.edgesWidth = 15.0;
     newLine.edgesColor = new BABYLON.Color4(1, 0, 0, 1);
-    createSphere(line[0], new BABYLON.Color3(1, 0, 0));
-    createSphere(line[1], new BABYLON.Color3(1, 0, 0));
+    sphereANew = createSphere(line[0], new BABYLON.Color3(1, 0, 0));
+    sphereBNew = createSphere(line[1], new BABYLON.Color3(1, 0, 0));
 }
 
 const pointCheckLine = [
